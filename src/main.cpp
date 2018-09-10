@@ -274,13 +274,12 @@ void frameRunner() {
                 sentChecked = true;
 
                 cv::Mat flat = prob.reshape(1, 5);
+
                 cv::Point maxLoc;
                 double confidence;
                 minMaxLoc(flat, 0, &confidence, 0, &maxLoc);
-                if (confidence > 0.5) {
-                    Sentiment s = static_cast<Sentiment>(maxLoc.x);
-                    sent[s] = sent.at(s) + 1;
-                }
+                Sentiment s = static_cast<Sentiment>(maxLoc.y);
+                sent[s] = sent.at(s) + 1;
             }
 
             // retail data

@@ -60,76 +60,89 @@ The program creates three threads for concurrency:
 ## Setting the build environment
 
 You must configure the environment to use the OpenVINO™ toolkit one time per session by running the following command:
-
+```
     source /opt/intel/computer_vision_sdk/bin/setupvars.sh
+```
 
 ## Building the code
 
 Start by changing the current directory to wherever you have git cloned the application code. For example:
-
+```
     cd shopper-sentiment-monitor-cpp
+```
 
 If you do not yet have a `build` directory create one:
-
+```
     mkdir build
+```
 
 Then change to that directory:
-
+```
     cd build
+```
 
 Now run the following commands:
-
+```
     cmake ..
     make
+```
 
 Once the commands are finished, you should have built the `monitor` application executable.
 
 ## Running the code
 
 To see a list of the various options:
-
+```
     ./monitor -h
+```
 
 To run the application with the needed models using the webcam:
-
-**TODO:**
+```
+    ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml
+```
 
 ### Hardware acceleration
 
 This application can take advantage of the hardware acceleration in the OpenVINO toolkit by using the `-b` and `-t` parameters.
 
 For example, to use the OpenVINO™ toolkit backend with the GPU in 32-bit mode:
-
-**TODO:**
+```
+    ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml -b=2 -t=1
+```
 
 To run the code using 16-bit floats, you have to both set the `-t` flag to use the GPU in 16-bit mode, as well as use the FP16 version of the Intel® models:
-
-**TODO:**
+```
+    ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml -b=2 -t=2
+```
 
 ## Sample videos
 
 There are several videos available to use as sample videos to show the capabilities of this application. You can download them by running these commands from the `shopper-gaze-monitor` directory:
-
+```
     mkdir resources
     cd resources
     wget https://github.com/intel-iot-devkit/sample-videos/raw/master/face-demographics-walking-and-pause.mp4
     wget https://github.com/intel-iot-devkit/sample-videos/raw/master/face-demographics-walking.mp4
     cd ..
+```
 
 To then execute the code using one of these sample videos, run the following commands from the `shopper-gaze-monitor` directory:
-
+```
     cd build
-**TODO:**
+    ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml -i=../resources/face-demographics-walking-and-pause.mp4
+```
 
 ### Machine to machine messaging with MQTT
 
 If you wish to use a MQTT server to publish data, you should set the following environment variables before running the program:
-
+```
     export MQTT_SERVER=localhost:1883
     export MQTT_CLIENT_ID=cvservice
+```
 
 Change the `MQTT_SERVER` to a value that matches the MQTT server you are connecting to.
 
 You should change the `MQTT_CLIENT_ID` to a unique value for each monitoring station, so you can track the data for individual locations. For example:
-
+```
     export MQTT_CLIENT_ID=shelf1337
+```
