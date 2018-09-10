@@ -49,6 +49,7 @@ Mat frame, blob, sentBlob;
 VideoCapture cap;
 int delay = 5;
 Net net, sentnet;
+bool sentChecked = false;
 
 // application parameters
 String model;
@@ -170,7 +171,16 @@ string getCurrentPerf() {
 void savePerformanceInfo() {
     m1.lock();
 
-    // TODO: implement this
+    vector<double> faceTimes, sentTimes;
+    double freq = getTickFrequency() / 1000;
+    double t = net.getPerfProfile(faceTimes) / freq;
+    double t2;
+    if (sentChecked) {
+        t2 = sentnet.getPerfProfile(sentTimes) / freq;
+    }
+    string label = format("Face inference time: %.2f ms, Sentiment inference time: %.2f ms", t, t2);
+
+    currentPerf = label;
 
     m1.unlock();
 }
@@ -209,11 +219,68 @@ void frameRunner() {
     for (;;) {
         Mat next = nextImageAvailable();
         if (!next.empty()) {
-            // TODO: implement this
+            // convert to 4d vector as required by model, and set as input
+            blobFromImage(next, blob, 1.0, Size(672, 384));
+            net.setInput(blob);
+            Mat prob = net.forward();
+
+            // get faces
+            std::vector<Rect> faces;
+            float* data = (float*)prob.data;
+            for (size_t i = 0; i < prob.total(); i += 7)
+            {
+                float confidence = data[i + 2];
+                if (confidence > 0.5)
+                {
+                    int left = (int)(data[i + 3] * frame.cols);
+                    int top = (int)(data[i + 4] * frame.rows);
+                    int right = (int)(data[i + 5] * frame.cols);
+                    int bottom = (int)(data[i + 6] * frame.rows);
+                    int width = right - left + 1;
+                    int height = bottom - top + 1;
+
+                    faces.push_back(Rect(left, top, width, height));
+                }
+            }
+
+            //int detSentiment;
+            map<Sentiment, int> sent = {
+                    {Neutral, 0},
+                    {Happy, 0},
+                    {Sad, 0},
+                    {Surprised, 0},
+                    {Anger, 0}
+            };
+            // detect sentiment
+            for(auto const& r: faces) {
+                // make sure the face rect is completely inside the main Mat
+                if ((r & Rect(0, 0, next.cols, next.rows)) != r) {
+                    continue;
+                }
+
+                //cv::Mat out;
+                cv::Mat face = next(r);
+
+                // convert to 4d vector, and process thru neural network
+                blobFromImage(face, sentBlob, 1.0, Size(64, 64));
+                sentnet.setInput(sentBlob, "input");
+                Mat prob = sentnet.forward("prob");
+                sentChecked = true;
+
+                cv::Mat flat = prob.reshape(1, 5);
+                cv::Point maxLoc;
+                double confidence;
+                minMaxLoc(flat, 0, &confidence, 0, &maxLoc);
+                if (confidence > 0.5) {
+                    Sentiment s = static_cast<Sentiment>(maxLoc.x);
+                    sent[s] = sent.at(s) + 1;
+                }
+            }
 
             // retail data
             ShoppingInfo info;
-            info.shoppers = 1;
+            info.shoppers = faces.size();
+            info.sent = sent;
             updateInfo(info);
 
             savePerformanceInfo();

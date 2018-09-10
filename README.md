@@ -46,8 +46,8 @@ The DNN models used are IntelÂ® optimized models that are part of the OpenVINOâ„
 
 You can find them here:
 
-- /opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001
-- /opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003
+- `/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001`
+- `/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003`
 
 ![Code organization](./images/arch3.png)
 
