@@ -61,7 +61,13 @@ int targetId;
 int rate;
 
 // Sentiment contains different kinds of emotions
-enum Sentiment { Neutral, Happy, Sad, Surprised, Anger };
+enum Sentiment {
+        Neutral,
+        Happy,
+        Sad,
+        Surprised,
+        Anger
+};
 
 // ShoppingInfo contains statistics for the shopping information tracked by this application.
 struct ShoppingInfo
@@ -263,8 +269,8 @@ void frameRunner() {
 
                 // convert to 4d vector, and process thru neural network
                 blobFromImage(face, sentBlob, 1.0, Size(64, 64));
-                sentnet.setInput(sentBlob, "input");
-                Mat prob = sentnet.forward("prob");
+                sentnet.setInput(sentBlob);
+                Mat prob = sentnet.forward();
                 sentChecked = true;
 
                 cv::Mat flat = prob.reshape(1, 5);
