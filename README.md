@@ -6,7 +6,7 @@
 | Programming Language: |  C++\* |
 | Time to Complete:    |  45 min     |
 
-![app image](./images/shopper-sentiment-monitor.jpg)
+![app image](./images/shopper-sentiment-monitor.png)
 
 ## Introduction
 
