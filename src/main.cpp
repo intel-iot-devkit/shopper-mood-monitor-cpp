@@ -27,6 +27,7 @@
 #include <thread>
 #include <queue>
 #include <map>
+#include <atomic>
 #include <mutex>
 #include <syslog.h>
 
@@ -59,6 +60,12 @@ String sentconfig;
 int backendId;
 int targetId;
 int rate;
+
+// flag to control threads
+std::atomic<bool> keepRunning(true);
+
+// mqtt parameters
+const string topic = "retail/traffic";
 
 // Sentiment contains different kinds of emotions
 enum Sentiment {
@@ -222,7 +229,7 @@ int handleMQTTControlMessages(void *context, char *topicName, int topicLen, MQTT
 
 // Function called by worker thread to process the next available video frame.
 void frameRunner() {
-    for (;;) {
+    while (keepRunning.load()) {
         Mat next = nextImageAvailable();
         if (!next.empty()) {
             // convert to 4d vector as required by model, and set as input
@@ -293,11 +300,24 @@ void frameRunner() {
     }
 }
 
+// publishInfo publishes current shoppingInfo to MQTT topic queue and then resets it
+void publishAndResetCurrentInfo()
+{
+    m2.lock();
+    ShoppingInfo rtn = currentInfo;
+    publishMQTTMessage(topic, rtn);
+    currentInfo.shoppers = 0;
+    for (std::pair<Sentiment, int> element : currentInfo.sent) {
+	Sentiment s = element.first;
+        currentInfo.sent[s] = 0;
+    }
+    m2.unlock();
+}
+
 // Function called by worker thread to handle MQTT updates. Pauses for rate second(s) between updates.
 void messageRunner() {
-    for (;;) {
-        publishMQTTMessage("retail/traffic", getCurrentInfo());
-        resetInfo();
+    while (keepRunning.load()) {
+        publishAndResetCurrentInfo();
         std::this_thread::sleep_for(std::chrono::seconds(rate));
     }
 }
@@ -359,6 +379,7 @@ int main(int argc, char** argv)
     }
 
     // initialize shopping info map
+    currentInfo.shoppers = 0;
     currentInfo.sent = {
             {Neutral, 0},
             {Happy, 0},
@@ -394,13 +415,14 @@ int main(int argc, char** argv)
         imshow("Shopper Sentiment Monitor", frame);
 
         if (waitKey(delay) >= 0) {
-            // TODO: signal threads to exit
+            keepRunning = false;
             break;
         }
     }
 
-    // TODO: wait for worker threads to exit
-    //t1.join();
+    // wait for the threads to finish
+    t1.join();
+    t2.join();
 
     // disconnect MQTT messaging
     mqtt_disconnect();

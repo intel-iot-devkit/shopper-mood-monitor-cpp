@@ -24,7 +24,7 @@ end
 subgraph local
 subgraph Frame thread
 Q[Take next available frame from queue]-->F[Look for faces using DNN]
-F-->P[Check poses using DNN]
+F-->P[Check sentiment using DNN]
 P-->U[Update stats]
 end
 subgraph Main thread
