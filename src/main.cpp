@@ -28,6 +28,7 @@
 #include <queue>
 #include <map>
 #include <atomic>
+#include <csignal>
 #include <mutex>
 #include <syslog.h>
 
@@ -61,8 +62,11 @@ int backendId;
 int targetId;
 int rate;
 
-// flag to control threads
-std::atomic<bool> keepRunning(true);
+// flag to control background threads
+atomic<bool> keepRunning(true);
+
+// flag to handle UNIX signals
+static volatile sig_atomic_t sig_caught = 0;
 
 // mqtt parameters
 const string topic = "retail/traffic";
@@ -86,10 +90,10 @@ struct ShoppingInfo
 // currentInfo contains the latest ShoppingInfo tracked by the application.
 ShoppingInfo currentInfo;
 
-std::queue<Mat> nextImage;
+queue<Mat> nextImage;
 String currentPerf;
 
-std::mutex m, m1, m2;
+mutex m, m1, m2;
 
 const char* keys =
     "{ help  h     | | Print help message. }"
@@ -150,7 +154,7 @@ void updateInfo(ShoppingInfo info) {
         currentInfo.shoppers = info.shoppers;
     }
 
-    for (std::pair<Sentiment, int> element : info.sent) {
+    for (pair<Sentiment, int> element : info.sent) {
 	Sentiment s = element.first;
 	int count = element.second;
 	if (currentInfo.sent[s] < info.sent[s]) {
@@ -164,7 +168,7 @@ void updateInfo(ShoppingInfo info) {
 void resetInfo() {
     m2.lock();
     currentInfo.shoppers = 0;
-    for (std::pair<Sentiment, int> element : currentInfo.sent) {
+    for (pair<Sentiment, int> element : currentInfo.sent) {
 	Sentiment s = element.first;
         currentInfo.sent[s] = 0;
     }
@@ -201,14 +205,14 @@ void savePerformanceInfo() {
 // publish MQTT message with a JSON payload
 void publishMQTTMessage(const string& topic, const ShoppingInfo& info)
 {
-    std::ostringstream s;
+    ostringstream s;
     s << "{\"shoppers\": \"" << info.shoppers << "\",";
     s << "\"neutral\": \"" << info.sent.at(Neutral) << "\"";
     s << "\"happy\": \"" << info.sent.at(Happy) << "\"";
     s << "\"sad\": \"" << info.sent.at(Sad) << "\"";
     s << "\"surprised\": \"" << info.sent.at(Surprised) << "\"";
     s << "\"anger\": \"" << info.sent.at(Anger) << "\"}";
-    std::string payload = s.str();
+    string payload = s.str();
 
     mqtt_publish(topic, payload);
 
@@ -238,7 +242,7 @@ void frameRunner() {
             Mat prob = net.forward();
 
             // get faces
-            std::vector<Rect> faces;
+            vector<Rect> faces;
             float* data = (float*)prob.data;
             for (size_t i = 0; i < prob.total(); i += 7)
             {
@@ -271,18 +275,19 @@ void frameRunner() {
                     continue;
                 }
 
-                //cv::Mat out;
-                cv::Mat face = next(r);
+                // Read detected face
+                Mat face = next(r);
 
-                // convert to 4d vector, and process thru neural network
+                // convert to 4d vector, and propagate through sentiment Neural Network
                 blobFromImage(face, sentBlob, 1.0, Size(64, 64));
                 sentnet.setInput(sentBlob);
                 Mat prob = sentnet.forward();
                 sentChecked = true;
 
-                cv::Mat flat = prob.reshape(1, 5);
-
-                cv::Point maxLoc;
+                // flatten the result from [1, 5, 1, 1] to [1, 5]
+                Mat flat = prob.reshape(1, 5);
+                // Find the max in returned list of sentiments
+                Point maxLoc;
                 double confidence;
                 minMaxLoc(flat, 0, &confidence, 0, &maxLoc);
                 Sentiment s = static_cast<Sentiment>(maxLoc.y);
@@ -298,6 +303,8 @@ void frameRunner() {
             savePerformanceInfo();
         }
     }
+
+    cout << "Video processing thread stopped" << endl;
 }
 
 // publishInfo publishes current shoppingInfo to MQTT topic queue and then resets it
@@ -307,7 +314,7 @@ void publishAndResetCurrentInfo()
     ShoppingInfo rtn = currentInfo;
     publishMQTTMessage(topic, rtn);
     currentInfo.shoppers = 0;
-    for (std::pair<Sentiment, int> element : currentInfo.sent) {
+    for (pair<Sentiment, int> element : currentInfo.sent) {
 	Sentiment s = element.first;
         currentInfo.sent[s] = 0;
     }
@@ -318,7 +325,19 @@ void publishAndResetCurrentInfo()
 void messageRunner() {
     while (keepRunning.load()) {
         publishAndResetCurrentInfo();
-        std::this_thread::sleep_for(std::chrono::seconds(rate));
+        this_thread::sleep_for(chrono::seconds(rate));
+    }
+
+    cout << "MQTT sender thread stopped" << endl;
+}
+
+// signal handler for the main thread
+void handle_sigterm(int signum)
+{
+    /* we only handle SIGTERM and SIGKILL here */
+    if (signum == SIGTERM) {
+        cout << "Interrupt signal (" << signum << ") received" << endl;
+        sig_caught = 1;
     }
 }
 
@@ -378,7 +397,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    // initialize shopping info map
+    // initialize shopping info
     currentInfo.shoppers = 0;
     currentInfo.sent = {
             {Neutral, 0},
@@ -388,15 +407,19 @@ int main(int argc, char** argv)
             {Anger, 0}
     };
 
+    // register signal handler
+    signal(SIGTERM, handle_sigterm);
+
     // start worker threads
-    std::thread t1(frameRunner);
-    std::thread t2(messageRunner);
+    thread t1(frameRunner);
+    thread t2(messageRunner);
 
     // read video input data
     for (;;) {
         cap.read(frame);
 
         if (frame.empty()) {
+            keepRunning = false;
             cerr << "ERROR! blank frame grabbed\n";
             break;
         }
@@ -414,7 +437,8 @@ int main(int argc, char** argv)
 
         imshow("Shopper Sentiment Monitor", frame);
 
-        if (waitKey(delay) >= 0) {
+        if (waitKey(delay) >= 0 || sig_caught) {
+            cout << "Attempting to stop background threads" << endl;
             keepRunning = false;
             break;
         }
