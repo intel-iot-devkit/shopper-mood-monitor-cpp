@@ -1,4 +1,4 @@
-# Shopper Sentiment Monitor
+# Shopper Mood Monitor
 
 | Details            |              |
 |-----------------------|---------------|
@@ -6,18 +6,18 @@
 | Programming Language: |  C++\* |
 | Time to Complete:    |  45 min     |
 
-![app image](./images/shopper-sentiment-monitor.png)
+![app image](./images/shopper-mood-monitor.png)
 
 ## Introduction
 
-This shopper sentiment monitor application is one of a series of reference implementations for Computer Vision (CV) using the OpenVINO™ toolkit. This application is designed for a retail shelf mounted camera system that counts the the number of passers-by that look toward the display to capture their sentiment which is classified into 5 emotions:
+This shopper mood monitor application is one of a series of reference implementations for Computer Vision (CV) using the OpenVINO™ toolkit. This application is designed for a retail shelf mounted camera system that counts the the number of passers-by that look toward the display to capture their mood which is classified into 5 emotions:
 - Neutral
 - Happy
 - Sad
 - Surprised
 - Anger
 
-It is intended to provide real-world marketing statistics for in-store shopping sentiment analysis.
+It is intended to provide real-world marketing statistics for in-store shopping mood analysis.
 
 ## Requirements
 
@@ -75,7 +75,7 @@ You must configure the environment to use the OpenVINO™ toolkit one time per s
 
 Start by changing the current directory to wherever you have git cloned the application code. For example:
 ```
-    cd shopper-sentiment-monitor-cpp
+    cd shopper-mood-monitor-cpp
 ```
 
 If you do not yet have a `build` directory create one:
@@ -119,12 +119,12 @@ For example, to use the OpenVINO™ toolkit backend with the GPU in 32-bit mode:
 
 To run the code using 16-bit floats, you have to both set the `-t` flag to use the GPU in 16-bit mode, as well as use the FP16 version of the Intel® models:
 ```
-    ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml -b=2 -t=2
+    ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP16/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP16/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP16/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP16/emotions-recognition-retail-0003.xml -b=2 -t=2
 ```
 
 ## Sample videos
 
-There are several videos available to use as sample videos to show the capabilities of this application. You can download them by running these commands from the `shopper-gaze-monitor` directory:
+There are several videos available to use as sample videos to show the capabilities of this application. You can download them by running these commands from the `shopper-mood-monitor` directory:
 ```
     mkdir resources
     cd resources
@@ -133,7 +133,7 @@ There are several videos available to use as sample videos to show the capabilit
     cd ..
 ```
 
-To then execute the code using one of these sample videos, run the following commands from the `shopper-gaze-monitor` directory:
+To then execute the code using one of these sample videos, run the following commands from the `shopper-mood-monitor` directory:
 ```
     cd build
     ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml -i=../resources/face-demographics-walking-and-pause.mp4
