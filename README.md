@@ -109,12 +109,11 @@ To run the application with the needed models using the webcam:
 ```
     ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml
 ```
+The user can choose different confidence levels for both face and emotion detection by using `--faceconf, -fc` and `--moodconf, -mc` command line parameters. By default both of these parameters are set to `0.5` i.e. at least `50%` detection confidence is required in order for the returned inference result to be considered valid.
 
 ### Hardware acceleration
 
 This application can take advantage of the hardware acceleration in the OpenVINO toolkit by using the `-b` and `-t` parameters.
-
-The user can choose different confidence levels for both face and emotion detection by using `--faceconf, -fc` and `--moodconf, -mc` command line parameters. By default, both of these parameters are set to `0.5` i.e. at least `50%` detection confidence is required in order for the detected result to be considered valid.
 
 For example, to use the OpenVINO™ toolkit backend with the GPU in 32-bit mode:
 ```
