@@ -17,6 +17,8 @@ This shopper mood monitor application is one of a series of reference implementa
 - Surprised
 - Anger
 
+If the emotion can't be determined with a level of confidence higher than the value configurable via command line parameter, the emotion is marked as Unknown.
+
 It is intended to provide real-world marketing statistics for in-store shopping mood analysis.
 
 ## Requirements
@@ -111,6 +113,8 @@ To run the application with the needed models using the webcam:
 ### Hardware acceleration
 
 This application can take advantage of the hardware acceleration in the OpenVINO toolkit by using the `-b` and `-t` parameters.
+
+The user can choose different confidence levels for both face and emotion detection by using `--faceconf, -fc` and `--moodconf, -mc` command line parameters. By default, both of these parameters are set to `0.5` i.e. at least `50%` detection confidence is required in order for the detected result to be considered valid.
 
 For example, to use the OpenVINO™ toolkit backend with the GPU in 32-bit mode:
 ```
