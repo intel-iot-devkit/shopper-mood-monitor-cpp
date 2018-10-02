@@ -3,7 +3,7 @@
 | Details            |              |
 |-----------------------|---------------|
 | Target OS:            |  Ubuntu\* 16.04 LTS   |
-| Programming Language: |  C++\* |
+| Programming Language: |  C++\ |
 | Time to Complete:    |  45 min     |
 
 ![app image](./images/shopper-mood-monitor.png)
@@ -43,7 +43,7 @@ Refer to https://software.intel.com/en-us/articles/OpenVINO-Install-Linux for mo
 You will need the OpenCL™ Runtime package if you plan to run inference on the GPU as shown by the
 instructions below. It is not mandatory for CPU inference.
 
-## How it works
+## How it Works
 
 The application uses a video source, such as a camera, to grab frames, and then uses 2 different Deep Neural Networks (DNNs) to process the data. The first network looks for faces, and then if successful is counted as a "shopper"
 
@@ -62,18 +62,18 @@ You can find them here:
 
 The program creates three threads for concurrency:
 
-- main thread that performs the video i/o
-- worker thread that processes video frames using the deep neural networks
-- worker thread that publishes any MQTT messages
+- Main thread that performs the video i/o
+- Worker thread that processes video frames using the deep neural networks
+- Worker thread that publishes any MQTT messages
 
-## Setting the build environment
+## Setting the Build Environment
 
 You must configure the environment to use the OpenVINO™ toolkit one time per session by running the following command:
 ```
     source /opt/intel/computer_vision_sdk/bin/setupvars.sh
 ```
 
-## Building the code
+## Building the Code
 
 Start by changing the current directory to wherever you have git cloned the application code. For example:
 ```
@@ -98,7 +98,7 @@ Now run the following commands:
 
 Once the commands are finished, you should have built the `monitor` application executable.
 
-## Running the code
+## Running the Code
 
 To see a list of the various options:
 ```
@@ -111,7 +111,7 @@ To run the application with the needed models using the webcam:
 ```
 The user can choose different confidence levels for both face and emotion detection by using `--faceconf, -fc` and `--moodconf, -mc` command line parameters. By default both of these parameters are set to `0.5` i.e. at least `50%` detection confidence is required in order for the returned inference result to be considered valid.
 
-### Hardware acceleration
+### Hardware Acceleration
 
 This application can take advantage of the hardware acceleration in the OpenVINO toolkit by using the `-b` and `-t` parameters.
 
@@ -125,7 +125,7 @@ To run the code using 16-bit floats, you have to both set the `-t` flag to use t
     ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP16/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP16/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP16/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP16/emotions-recognition-retail-0003.xml -b=2 -t=2
 ```
 
-## Sample videos
+## Sample Videos
 
 There are several videos available to use as sample videos to show the capabilities of this application. You can download them by running these commands from the `shopper-mood-monitor` directory:
 ```
@@ -142,7 +142,7 @@ To then execute the code using one of these sample videos, run the following com
     ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml -i=../resources/face-demographics-walking-and-pause.mp4
 ```
 
-### Machine to machine messaging with MQTT
+### Machine to Machine Messaging with MQTT
 
 If you wish to use a MQTT server to publish data, you should set the following environment variables before running the program:
 ```
