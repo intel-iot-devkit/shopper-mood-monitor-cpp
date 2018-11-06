@@ -61,7 +61,8 @@ String sentconfig;
 int backendId;
 int targetId;
 int rate;
-float confidenceFactor;
+float confidenceFace;
+float confidenceMood;
 
 // flag to control background threads
 atomic<bool> keepRunning(true);
@@ -78,7 +79,8 @@ enum Sentiment {
         Happy,
         Sad,
         Surprised,
-        Anger
+        Anger,
+        Unknown
 };
 
 // ShoppingInfo contains statistics for the shopping information tracked by this application.
@@ -97,12 +99,13 @@ String currentPerf;
 mutex m, m1, m2;
 
 const char* keys =
-    "{ help  h     | | Print help message. }"
-    "{ device d    | 0 | camera device number. }"
-    "{ input i     | | Path to input image or video file. Skip this argument to capture frames from a camera.}"
-    "{ model m     | | Path to .bin file of model containing face recognizer. }"
-    "{ config c    | | Path to .xml file of model containing network configuration. }"
-    "{ factor f    | 0.5 | Confidence factor required. }"
+    "{ help  h      | | Print help message. }"
+    "{ device d     | 0 | camera device number. }"
+    "{ input i      | | Path to input image or video file. Skip this argument to capture frames from a camera.}"
+    "{ model m      | | Path to .bin file of model containing face recognizer. }"
+    "{ config c     | | Path to .xml file of model containing network configuration. }"
+    "{ faceconf fc  | 0.5 | Confidence factor for face detection required. }"
+    "{ moodconf mc  | 0.5 | Confidence factor for emotion detection required. }"
     "{ sentmodel sm     | | Path to .bin file of sentiment model. }"
     "{ sentconfig sc    | | Path to a .xml file of sentiment model containing network configuration. }"
     "{ backend b    | 0 | Choose one of computation backends: "
@@ -249,7 +252,7 @@ void frameRunner() {
             for (size_t i = 0; i < prob.total(); i += 7)
             {
                 float confidence = data[i + 2];
-                if (confidence > confidenceFactor)
+                if (confidence > confidenceFace)
                 {
                     int left = (int)(data[i + 3] * frame.cols);
                     int top = (int)(data[i + 4] * frame.rows);
@@ -268,7 +271,8 @@ void frameRunner() {
                     {Happy, 0},
                     {Sad, 0},
                     {Surprised, 0},
-                    {Anger, 0}
+                    {Anger, 0},
+                    {Unknown, 0}
             };
             // detect sentiment
             for(auto const& r: faces) {
@@ -292,7 +296,12 @@ void frameRunner() {
                 Point maxLoc;
                 double confidence;
                 minMaxLoc(flat, 0, &confidence, 0, &maxLoc);
-                Sentiment s = static_cast<Sentiment>(maxLoc.y);
+                Sentiment s;
+                if (confidence > static_cast<double>(confidenceMood)) {
+                    s = static_cast<Sentiment>(maxLoc.y);
+                } else {
+                    s = Unknown;
+                }
                 sent[s] = sent.at(s) + 1;
             }
 
@@ -359,8 +368,9 @@ int main(int argc, char** argv)
     backendId = parser.get<int>("backend");
     targetId = parser.get<int>("target");
     rate = parser.get<int>("rate");
-    confidenceFactor = parser.get<float>("factor");
-    
+    confidenceFace = parser.get<float>("faceconf");
+    confidenceMood = parser.get<float>("moodconf");
+
     sentmodel = parser.get<String>("sentmodel");
     sentconfig = parser.get<String>("sentconfig");
 
@@ -407,7 +417,8 @@ int main(int argc, char** argv)
             {Happy, 0},
             {Sad, 0},
             {Surprised, 0},
-            {Anger, 0}
+            {Anger, 0},
+            {Unknown, 0}
     };
 
     // register signal handler
@@ -433,9 +444,9 @@ int main(int argc, char** argv)
         putText(frame, label, Point(0, 15), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 0));
 
         ShoppingInfo info = getCurrentInfo();
-        label = format("Shoppers: %d, Neutral: %d, Happy: %d, Sad: %d, Surprised: %d, Anger: %d",
+        label = format("Shoppers: %d, Neutral: %d, Happy: %d, Sad: %d, Surprised: %d, Anger: %d, Unknown: %d",
                         info.shoppers, info.sent[Neutral], info.sent[Happy], info.sent[Sad],
-                        info.sent[Surprised], info.sent[Anger]);
+                        info.sent[Surprised], info.sent[Anger], info.sent[Unknown]);
         putText(frame, label, Point(0, 40), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 0));
 
         imshow("Shopper Mood Monitor", frame);
