@@ -438,9 +438,9 @@ int main(int argc, char** argv)
                         info.sent[Surprised], info.sent[Anger]);
         putText(frame, label, Point(0, 40), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 0));
 
-        imshow("Shopper Sentiment Monitor", frame);
+        imshow("Shopper Mood Monitor", frame);
 
-        if (waitKey(delay) >= 0 || sig_caught) {
+        if (waitKey(delay) == 27 || sig_caught) {
             cout << "Attempting to stop background threads" << endl;
             keepRunning = false;
             break;
