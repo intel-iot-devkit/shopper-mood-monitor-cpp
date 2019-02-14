@@ -10,44 +10,43 @@
 
 ## Introduction
 
-This shopper mood monitor application is one of a series of reference implementations for Computer Vision (CV) using the Intel® Distribution of OpenVINO™ toolkit. This application is designed for a retail shelf mounted camera system that counts the the number of passers-by that look toward the display to capture their mood which is classified into 5 emotions:
+This shopper mood monitor application is one of a series of reference implementations for Computer Vision (CV) using the Intel® Distribution of OpenVINO™ toolkit. It is designed for a retail shelf mounted camera system that counts the number of passers-by who look towards the display and captures their mood, which is classified into 5 emotions:
 - Neutral
 - Happy
 - Sad
 - Surprised
 - Anger
 
-If the emotion can't be determined with a level of confidence higher than the value configurable via command line parameter, the emotion is marked as Unknown.
+If the emotion cannot be determined with a level of confidence higher than the value configured via command line parameter, the emotion is marked as Unknown.
 
 It is intended to provide real-world marketing statistics for in-store shopping mood analysis.
 
 ## Requirements
 
 ### Hardware
-* 6th Generation Intel® Core™ processor with Intel® Iris® Pro graphics and Intel® HD Graphics
+* 6th Generation Intel® Core™ processor with Intel® Iris® Pro graphics or Intel® HD Graphics
 
 ### Software
-* [Ubuntu\* 16.04 LTS](http://releases.ubuntu.com/16.04/)
-*Note*: You must be running kernel version 4.7+ to use this software. We recommend using a 4.14+ kernel to use this software. Run the following command to determine your kernel version:
+* [Ubuntu\* 16.04 LTS](http://releases.ubuntu.com/16.04/)<br><br>
+*Note*: We recommend using a 4.14+ kernel to use this software. Run the following command to determine your kernel version:
 ```
 uname -a
 ```
-* OpenCL™ Runtime Package
-* Intel® Distribution of OpenVINO™ toolkit
+* OpenCL™ Runtime package
+* Intel® Distribution of OpenVINO™ toolkit R5
 
 ## Setup
 
-### Install OpenVINO™ Toolkit
+### Install Intel® Distribution of OpenVINO™ toolkit
 Refer to https://software.intel.com/en-us/articles/OpenVINO-Install-Linux for more information about how to install and setup the Intel® Distribution of OpenVINO™ toolkit.
 
-You will need the OpenCL™ Runtime package if you plan to run inference on the GPU as shown by the
-instructions below. It is not mandatory for CPU inference.
+You will need the OpenCL™ Runtime package if you plan to run inference on the GPU as shown by the instructions below. It is not mandatory for CPU inference.
 
 ## How it Works
 
-The application uses a video source, such as a camera, to grab frames, and then uses 2 different Deep Neural Networks (DNNs) to process the data. The first network looks for faces, and then if successful is counted as a "shopper"
+The application uses a video source, such as a camera, to grab the frames. It uses 2 different Deep Neural Networks (DNNs) to process the data. The first neural network detect faces. If the person's face is detected, it is counted as a "shopper".
 
-A second neural network is then used to determine the emotion for each detected face if the person's head is facing towards the camera.
+A second neural network is then used to determine the emotion for each detected face, if the person's head is facing towards the camera.
 
 The data can then optionally be sent to a MQTT machine to machine messaging server, as part of a retail data analytics system.
 
@@ -73,7 +72,7 @@ You must configure the environment to use the Intel® Distribution of OpenVINO�
     source /opt/intel/computer_vision_sdk/bin/setupvars.sh
 ```
 
-## Building the Code
+## Build the Application
 
 Start by changing the current directory to wherever you have git cloned the application code. For example:
 ```
@@ -96,16 +95,14 @@ Now run the following commands:
     make
 ```
 
-Once the commands are finished, you should have built the `monitor` application executable.
-
-## Running the Code
+## Run the Application
 
 To see a list of the various options:
 ```
     ./monitor -h
 ```
 
-To run the application with the needed models using the webcam:
+To run the application with the required models using webcam, use the below command:
 ```
     ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml
 ```
@@ -115,24 +112,24 @@ The user can choose different confidence levels for both face and emotion detect
 
 This application can take advantage of the hardware acceleration in the Intel® Distribution of OpenVINO™ toolkit by using the `-b` and `-t` parameters.
 
-For example, to use the Intel® Distribution of OpenVINO™ toolkit backend with the GPU in 32-bit mode:
+To run the application on the integrated Intel® GPU in 32-bit mode, use the below command:
 ```
     ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml -b=2 -t=1
 ```
 
-To run the code using 16-bit floats, you have to both set the `-t` flag to use the GPU in 16-bit mode, as well as use the FP16 version of the Intel® models:
+To run the application on the integrated Intel® GPU in 16-bit mode, use the below command:
 ```
     ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP16/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP16/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP16/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP16/emotions-recognition-retail-0003.xml -b=2 -t=2
 ```
 
-To run the code using the VPU, you have to set the `-t` flag to `3` and also use the 16-bit FP16 version of the Intel® models:
+To run the application using the VPU, use the below command:
 ```
     ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP16/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP16/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP16/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP16/emotions-recognition-retail-0003.xml -b=2 -t=3
 ```
 
 ## Sample videos
 
-There are several videos available to use as sample videos to show the capabilities of this application. You can download them by running these commands from the `shopper-mood-monitor` directory:
+There are several videos available to use as sample videos to show the capabilities of this application. You can download them by running these commands from the `shopper-mood-monitor-cpp` directory:
 ```
     mkdir resources
     cd resources
@@ -141,13 +138,20 @@ There are several videos available to use as sample videos to show the capabilit
     cd ..
 ```
 
-To then execute the code using one of these sample videos, run the following commands from the `shopper-mood-monitor` directory:
+To execute the application using one of these sample videos, run the following commands from the `shopper-mood-monitor-cpp` directory:
 ```
     cd build
     ./monitor -m=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.bin -c=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.xml -sm=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin -sc=/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml -i=../resources/face-demographics-walking-and-pause.mp4
 ```
 
 ### Machine to Machine Messaging with MQTT
+
+
+#### Install Mosquitto Broker
+```
+    sudo apt-get update
+    sudo apt-get install mosquitto mosquitto-clients
+```
 
 If you wish to use a MQTT server to publish data, you should set the following environment variables before running the program:
 ```
@@ -162,7 +166,7 @@ You should change the `MQTT_CLIENT_ID` to a unique value for each monitoring sta
     export MQTT_CLIENT_ID=shelf1337
 ```
 
-If you want to monitor the MQTT messages sent to your local server, and you have the `mosquitto` client utilities installed, you can run the following command:
+If you want to monitor the MQTT messages sent to your local server, and you have the `mosquitto` client utilities installed, you can run the following command on a new terminal while the application is running:
 ```
 mosquitto_sub -t 'retail/traffic'
 ```
