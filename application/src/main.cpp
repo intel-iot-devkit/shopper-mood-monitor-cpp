@@ -31,6 +31,8 @@
 #include <csignal>
 #include <mutex>
 #include <syslog.h>
+#include <string>
+#include <fstream>
 
 // OpenCV includes
 #include <opencv2/core.hpp>
@@ -38,6 +40,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/dnn.hpp>
+#include <nlohmann/json.hpp>
 
 // MQTT
 #include "mqtt.h"
@@ -45,6 +48,9 @@
 using namespace std;
 using namespace cv;
 using namespace dnn;
+
+using json = nlohmann::json;
+json jsonobj;
 
 // OpenCV-related variables
 Mat frame, blob, sentBlob;
@@ -101,7 +107,6 @@ mutex m, m1, m2;
 const char* keys =
     "{ help  h      | | Print help message. }"
     "{ device d     | 0 | camera device number. }"
-    "{ input i      | | Path to input image or video file. Skip this argument to capture frames from a camera.}"
     "{ model m      | | Path to .bin file of model containing face recognizer. }"
     "{ config c     | | Path to .xml file of model containing network configuration. }"
     "{ faceconf fc  | 0.5 | Confidence factor for face detection required. }"
@@ -117,7 +122,8 @@ const char* keys =
                         "0: CPU target (by default), "
                         "1: OpenCL, "
                         "2: OpenCL fp16 (half-float precision), "
-                        "3: VPU }"
+                        "3: VPU, "
+			"5: HETERO:FPGA,CPU }"
     "{ rate r      | 1 | number of seconds between data updates to MQTT server. }";
 
 
@@ -290,8 +296,8 @@ void frameRunner() {
                 Mat prob = sentnet.forward();
                 sentChecked = true;
 
-                // flatten the result from [1, 5, 1, 1] to [1, 5]
-                Mat flat = prob.reshape(1, 5);
+                // flatten the result
+                Mat flat = prob.reshape(1, (prob.rows * prob.cols));
                 // Find the max in returned list of sentiments
                 Point maxLoc;
                 double confidence;
@@ -374,6 +380,13 @@ int main(int argc, char** argv)
     sentmodel = parser.get<String>("sentmodel");
     sentconfig = parser.get<String>("sentconfig");
 
+    string conf_file = "../resources/config.json";
+    string input;
+    std::ifstream confFile(conf_file);
+    confFile>>jsonobj;
+    auto obj = jsonobj["inputs"];
+    input = obj[0]["video"];
+
     // connect MQTT messaging
     int result = mqtt_start(handleMQTTControlMessages);
     if (result == 0) {
@@ -395,20 +408,20 @@ int main(int argc, char** argv)
     sentnet.setPreferableTarget(targetId);
 
     // open video capture source
-    if (parser.has("input")) {
-        cap.open(parser.get<String>("input"));
-
-        // also adjust delay so video playback matches the number of FPS in the file
-        double fps = cap.get(CAP_PROP_FPS);
-        delay = 1000/fps;
-    }
+    if (input.size() == 1 && *(input.c_str()) >= '0' && *(input.c_str()) <= '9')
+        cap.open(std::stoi(input));
     else
-        cap.open(parser.get<int>("device"));
+        cap.open(input);
 
-    if (!cap.isOpened()) {
+    if (!cap.isOpened())
+    {
         cerr << "ERROR! Unable to open video source\n";
         return -1;
     }
+
+    // Also adjust delay so video playback matches the number of FPS in the file
+    double fps = cap.get(CAP_PROP_FPS);
+    delay = 1000 / fps;
 
     // initialize shopping info
     currentInfo.shoppers = 0;
@@ -468,3 +481,4 @@ int main(int argc, char** argv)
 
     return 0;
 }
+

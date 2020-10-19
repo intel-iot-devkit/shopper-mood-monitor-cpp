@@ -39,11 +39,21 @@ message(STATUS "${Blue}Intel Shopper Gaze Monitor${CR}")
 message(STATUS "${Blue}Checking OS version...${CR}")
 
 set(REQUIRED_OS_ID "Ubuntu")
-set(REQUIRED_OS_VERSION "16.04")
+set(REQUIRED_OS_VERSION "18.04")
 include(osdetect)
 
 # Check for Intel OpenVINO
 message(STATUS "${Blue}Checking prerequisites...${CR}")
+
+if (IE_NOT_FOUND_MESSAGE)
+    find_package(InferenceEngine 1.5 QUIET)
+    if (NOT(InferenceEngine_FOUND))
+        message(FATAL_ERROR ${IE_NOT_FOUND_MESSAGE})
+    endif()
+else()
+    find_package(InferenceEngine 1.5 REQUIRED)
+endif()
+
 
 find_package(DemoOpenVINO)
 if(NOT OpenCV_FOUND)
@@ -51,17 +61,19 @@ if(NOT OpenCV_FOUND)
 endif( )
 
 include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(application/include)
+include_directories(json/single_include)
 
 # Install paho MQTT dependency
 include(pahomqtt)
 
 # Application executables
 set(MONITOR monitor)
-set(DSOURCES src/main.cpp src/mqtt.cpp)
+set(DSOURCES application/src/main.cpp application/src/mqtt.cpp )
 add_executable(${MONITOR} ${DSOURCES})
 add_dependencies(${MONITOR} pahomqtt)
 set_target_properties(${MONITOR} ${TRAINER} PROPERTIES COMPILE_FLAGS "-pthread -std=c++11")
-target_link_libraries (${MONITOR} ${OpenCV_LIBS} pthread paho-mqtt3cs)
+target_link_libraries (${MONITOR} ${OpenCV_LIBS} ${InferenceEngine_LIBRARIES} pthread paho-mqtt3cs)
 
 # Install
 install(TARGETS ${MONITOR} DESTINATION bin)
