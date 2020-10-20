@@ -191,6 +191,8 @@ The user can choose different confidence levels for both face and emotion detect
 ```
    **FP16**: FP16 is half-precision floating-point arithmetic uses 16 bits. 5 bits for the magnitude and 10 bits for the precision. For more information, [click here](https://en.wikipedia.org/wiki/Half-precision_floating-point_format) 
 
+**Note:** The Model Loading Time for GPU is quite long. So to observe the inference for GPU, please try to use longer duration videos.
+
 
 ### Running on the Intel® Movidius™ VPU
 
